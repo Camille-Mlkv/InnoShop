@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using InnoShop.Services.AuthAPI.Models.DTO;
+using InnoShop.Services.AuthAPI.Service.IService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InnoShop.Services.AuthAPI.Controllers
@@ -7,16 +9,41 @@ namespace InnoShop.Services.AuthAPI.Controllers
     [ApiController]
     public class AuthAPIController : ControllerBase
     {
-        [HttpPost("register")]
-        public async Task<IActionResult> Register()
+        private readonly IAuthService _authService;
+        protected ResponseDTO _response;
+        public AuthAPIController(IAuthService authService)
         {
-            return Ok();
+            _authService = authService;
+            _response = new();
+        }
+
+
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO model)
+        {
+            var errorMessage = await _authService.Register(model);
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                _response.IsSuccess = false;
+                _response.Message = errorMessage;
+                return BadRequest(_response);
+            }
+            return Ok(_response);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login()
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
         {
-            return Ok();
+            var loginResponse=await _authService.Login(model);
+            if (loginResponse.User == null)
+            {
+                _response.IsSuccess = false;
+                _response.Message = "Username or password is incorrect.";
+                return BadRequest(_response);
+            }
+            _response.Result = loginResponse;
+            return Ok(_response);
         }
     }
 }
