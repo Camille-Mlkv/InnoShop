@@ -3,6 +3,9 @@ using InnoShop.Services.AuthAPI.Models;
 using InnoShop.Services.AuthAPI.Models.DTO;
 using InnoShop.Services.AuthAPI.Service.IService;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using System;
 
 namespace InnoShop.Services.AuthAPI.Service
 {
@@ -13,20 +16,32 @@ namespace InnoShop.Services.AuthAPI.Service
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
+        private readonly IUrlHelperFactory _urlHelperFactory;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEmailService _emailService;
+
         public AuthService(AppDbContext db, IJwtTokenGenerator jwtTokenGenerator,
-            UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+            UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager,
+            IUrlHelperFactory urlHelperFactory,
+            IHttpContextAccessor httpContextAccessor,
+            IEmailService emailService)
         {
             _db = db;
             _jwtTokenGenerator = jwtTokenGenerator;
             _userManager = userManager;
             _roleManager = roleManager;
+
+            _urlHelperFactory = urlHelperFactory;
+            _httpContextAccessor = httpContextAccessor;
+            _emailService = emailService;
         }
         public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
         {
             var user=_db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower()==loginRequestDTO.UserName.ToLower());
             bool isValid=await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
+            bool isAccountConfirmed=await _userManager.IsEmailConfirmedAsync(user);
 
-            if(user==null || !isValid)
+            if(user==null || !isValid || !isAccountConfirmed)
             {
                 return new LoginResponseDTO() { User = null, Token = "" };
             }
@@ -51,7 +66,7 @@ namespace InnoShop.Services.AuthAPI.Service
             return loginResponseDTO;
         }
 
-        public async Task<string> Register(RegistrationRequestDTO registrationRequestDTO)
+        public async Task<string> Register(RegistrationRequestDTO registrationRequestDTO) //add confirmation
         {
             ApplicationUser user = new()
             {
@@ -75,6 +90,29 @@ namespace InnoShop.Services.AuthAPI.Service
                         Name = userToReturn.Name,
                         PhoneNumber = userToReturn.PhoneNumber,
                     };
+
+                    // Generate email confirmation token
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    // Construct callback URL
+                    var actionContext = new ActionContext(
+                        _httpContextAccessor.HttpContext,
+                        _httpContextAccessor.HttpContext.GetRouteData(),
+                        new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+
+                    var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
+                    var callbackUrl = urlHelper.Action(
+                        "ConfirmEmail",
+                        "AuthAPI",
+                        new { userId = user.Id, code = code },
+                        protocol: _httpContextAccessor.HttpContext.Request.Scheme);
+
+                    // Преобразуем локальный URL в публичный URL ngrok
+                    callbackUrl = callbackUrl.Replace("https://localhost:7001", "https://92c1-158-181-40-255.ngrok-free.app");
+
+                    // Send email
+                    await _emailService.SendEmailAsync(registrationRequestDTO.Email, "Confirm your account",
+                        $"Confrim your account on InnoShop through this link: <a href='{callbackUrl}'>Here</a>");
                     return "";
                 }
                 else

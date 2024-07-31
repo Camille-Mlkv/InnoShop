@@ -59,7 +59,7 @@ namespace InnoShop.Web.Controllers
             ResponseDTO result=await _authService.RegisterAsync(obj);
             if (result != null && result.IsSuccess)
             {
-                TempData["success"] = "Registrated successfully!";
+                TempData["success"] = "A confirmation email has been sent to your adress!";
                 return RedirectToAction(nameof(Login));
 
             }

@@ -49,7 +49,7 @@ namespace InnoShop.Web.Service
                         break;
                 }
 
-                apiResponse = await client.SendAsync(message);
+                apiResponse = await client.SendAsync(message); //here we go to our service
 
                 switch (apiResponse.StatusCode)
                 {
