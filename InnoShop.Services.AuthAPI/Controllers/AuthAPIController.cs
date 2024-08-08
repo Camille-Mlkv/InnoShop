@@ -1,10 +1,12 @@
 ﻿using InnoShop.Services.AuthAPI.Models;
 using InnoShop.Services.AuthAPI.Models.DTO;
+using InnoShop.Services.AuthAPI.Models.PasswordModels;
 using InnoShop.Services.AuthAPI.Service;
 using InnoShop.Services.AuthAPI.Service.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InnoShop.Services.AuthAPI.Controllers
@@ -73,5 +75,45 @@ namespace InnoShop.Services.AuthAPI.Controllers
                 return BadRequest("Error");
             
         }
+
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                await _authService.ForgotPassword(model); //sending email
+                _response.IsSuccess = true;
+                _response.Message = "Okay";
+                return Ok(_response);
+            }
+            _response.IsSuccess = false;
+            _response.Message = "Not fine";
+            return BadRequest(_response);
+        }
+
+        [HttpGet("ResetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string userId, string code)
+        {
+            var userEmail = (await _userManager.FindByIdAsync(userId)).Email;
+            var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(userEmail)}";
+            return Redirect(callbackUrl);
+        }
+
+        [HttpPost("SaveNewPassword")]
+        public async Task<IActionResult> SaveNewPassword(ResetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                ResponseDTO response=await _authService.ResetPassword(model);
+                if (response.IsSuccess)
+                {
+                    return Ok(response);
+                }
+                return BadRequest(response);
+            }
+            return BadRequest();    
+        }
+
     }
 }

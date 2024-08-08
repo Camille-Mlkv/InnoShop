@@ -1,4 +1,5 @@
 ﻿using InnoShop.Web.Models;
+using InnoShop.Web.Models.PasswordModels;
 using InnoShop.Web.Service.IService;
 using InnoShop.Web.Utility;
 
@@ -32,6 +33,28 @@ namespace InnoShop.Web.Service
                 Data= registrationRequestDTO,
                 Url=SD.AuthAPIBase+"/api/auth/register"
 
+            });
+        }
+
+
+        public async Task<ResponseDTO?> ForgotPasswordAsync(ForgotPasswordViewModel obj)
+        {
+            return await _baseService.SendAsync(new RequestDTO()
+            {
+                ApiType = SD.ApiType.POST,
+                Data = obj,
+                Url=SD.AuthAPIBase+"/api/auth/ForgotPassword"
+            });
+        }
+
+
+        public async Task<ResponseDTO?> ResetPasswordAsync(ResetPasswordViewModel model)
+        {
+            return await _baseService.SendAsync(new RequestDTO()
+            {
+                ApiType = SD.ApiType.POST,
+                Data = model,
+                Url = SD.AuthAPIBase + "/api/auth/SaveNewPassword"
             });
         }
     }

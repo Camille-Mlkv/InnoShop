@@ -1,6 +1,7 @@
 ﻿using InnoShop.Services.AuthAPI.Data;
 using InnoShop.Services.AuthAPI.Models;
 using InnoShop.Services.AuthAPI.Models.DTO;
+using InnoShop.Services.AuthAPI.Models.PasswordModels;
 using InnoShop.Services.AuthAPI.Service.IService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -128,5 +129,56 @@ namespace InnoShop.Services.AuthAPI.Service
             }
             return "Error occured";
         }
+
+
+        public async Task ForgotPassword(ForgotPasswordViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+            {
+                return;
+            }
+
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var actionContext = new ActionContext(
+                _httpContextAccessor.HttpContext,
+                _httpContextAccessor.HttpContext.GetRouteData(),
+                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+
+            var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
+            var callbackUrl = urlHelper.Action(
+                "ResetPassword",
+                "AuthAPI",
+                new { userId = user.Id, code = code },
+                protocol: _httpContextAccessor.HttpContext.Request.Scheme);
+
+            await _emailService.SendEmailAsync(model.Email, "Reset Password",
+                $"To reset the password follow the link: <a href='{callbackUrl}'>link</a>");
+        }
+
+        public async Task<ResponseDTO> ResetPassword(ResetPasswordViewModel model)
+        {
+            ResponseDTO response=new ResponseDTO();
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                response.IsSuccess = true;
+                response.Message = "User is null";
+                return response;
+            }
+            var resetResult=await _userManager.ResetPasswordAsync(user,model.Code,model.Password);
+            if (resetResult.Succeeded)
+            {
+                response.IsSuccess = true;
+                response.Message = "Password successfully reset";
+                return response;
+            }
+            response.IsSuccess = false;
+            response.Message = "An unhandled error occured";
+            return response;
+            
+        }
+
     }
 }

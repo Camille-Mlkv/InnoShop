@@ -1,7 +1,10 @@
 ﻿using InnoShop.Web.Models;
+using InnoShop.Web.Models.PasswordModels;
 using InnoShop.Web.Service.IService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
@@ -99,5 +102,86 @@ namespace InnoShop.Web.Controllers
             var principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         }
+
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            ResponseDTO result = await _authService.ForgotPasswordAsync(model);
+            if (result != null && result.IsSuccess)
+            {
+                return RedirectToAction(nameof(ForgotPasswordConfirmation)); 
+            }
+            else
+            {
+                TempData["error"] = result.Message;
+            }
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string code = null,string id=null,string email=null)
+        {
+            if (code == null) 
+            {
+                return View("Error");
+            }
+            else
+            {
+                var model = new ResetPasswordViewModel
+                {
+                    Code = code,
+                    Email= email
+                };
+                return View(model);
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            ResponseDTO response=await _authService.ResetPasswordAsync(model);
+            if (response != null && response.IsSuccess)
+            {
+                return View("ResetPasswordConfirmation");
+            }
+            else
+            {
+                TempData["error"] = response.Message;
+            }
+            return View(model);
+        }
+
+
+        [HttpGet]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
+
     }
 }
