@@ -105,11 +105,8 @@ namespace InnoShop.Services.AuthAPI.Service
                     var callbackUrl = urlHelper.Action(
                         "ConfirmEmail",
                         "AuthAPI",
-                        new { userId = user.Id, code = code },
+                        new { userId = user.Id },
                         protocol: _httpContextAccessor.HttpContext.Request.Scheme);
-
-                    // Преобразуем локальный URL в публичный URL ngrok
-                    callbackUrl = callbackUrl.Replace("https://localhost:7001", "https://92c1-158-181-40-255.ngrok-free.app");
 
                     // Send email
                     await _emailService.SendEmailAsync(registrationRequestDTO.Email, "Confirm your account",
@@ -130,6 +127,28 @@ namespace InnoShop.Services.AuthAPI.Service
             return "Error occured";
         }
 
+        public async Task<string> ConfirmAccount(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return "Error, user is null.";
+            }
+
+            string code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            if (code == null)
+            {
+                return "Error, code is null.";
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+            {
+                return "";
+            }
+
+            else return "Unhandled Error";
+        }
+
 
         public async Task ForgotPassword(ForgotPasswordViewModel model)
         {
@@ -138,8 +157,6 @@ namespace InnoShop.Services.AuthAPI.Service
             {
                 return;
             }
-
-            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
 
             var actionContext = new ActionContext(
                 _httpContextAccessor.HttpContext,
@@ -150,14 +167,26 @@ namespace InnoShop.Services.AuthAPI.Service
             var callbackUrl = urlHelper.Action(
                 "ResetPassword",
                 "AuthAPI",
-                new { userId = user.Id, code = code },
+                new { userId = user.Id },
                 protocol: _httpContextAccessor.HttpContext.Request.Scheme);
 
             await _emailService.SendEmailAsync(model.Email, "Reset Password",
                 $"To reset the password follow the link: <a href='{callbackUrl}'>link</a>");
         }
 
-        public async Task<ResponseDTO> ResetPassword(ResetPasswordViewModel model)
+        public async Task<string> ResetPassword(string userId) 
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return "Error";
+            }
+            string code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(user.Email)}";
+            return callbackUrl;
+        }
+
+        public async Task<ResponseDTO> SavePassword(ResetPasswordViewModel model)
         {
             ResponseDTO response=new ResponseDTO();
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -180,5 +209,87 @@ namespace InnoShop.Services.AuthAPI.Service
             
         }
 
+        public async Task<ResponseDTO> UpdateUserAsync(string id, UpdateUserDTO model)
+        {
+            var response=new ResponseDTO();
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                response.IsSuccess = false;
+                response.Message = "User not found";
+                return response;
+            }
+            if (model.Email != null && model.Email != user.Email)
+            {
+                var emailInUse = await _userManager.FindByEmailAsync(model.Email);
+                if (emailInUse != null)
+                {
+                    response.IsSuccess = false;
+                    response.Message="Email is already in use";
+                    return response;
+                }
+
+                user.Email = model.Email;
+                user.EmailConfirmed = false;
+
+                // Construct callback URL
+                var actionContext = new ActionContext(
+                    _httpContextAccessor.HttpContext,
+                    _httpContextAccessor.HttpContext.GetRouteData(),
+                    new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
+
+                var urlHelper = _urlHelperFactory.GetUrlHelper(actionContext);
+                var callbackUrl = urlHelper.Action(
+                    "ConfirmEmail",
+                    "AuthAPI",
+                    new { userId = user.Id },
+                    protocol: _httpContextAccessor.HttpContext.Request.Scheme);
+
+                // Send email
+                await _emailService.SendEmailAsync(model.Email, "Confirm your account",
+                    $"Confrim your account on InnoShop through this link: <a href='{callbackUrl}'>Here</a>");
+            }
+
+            user.Name = model.Name ?? user.Name;
+            user.PhoneNumber = model.PhoneNumber ?? user.PhoneNumber;
+            user.UserName=model.Email?? user.Email;
+            user.NormalizedEmail = model.Email.ToUpper() ?? user.Email.ToUpper();
+
+            var result=await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                response.IsSuccess = false;
+                response.Message = "An unhandled error occured";
+                return response;
+            }
+
+            response.IsSuccess = true;
+            response.Message = "User successfully updated";
+            return response;
+        }
+
+
+        public async Task<ResponseDTO> DeleteUserAsync(string id)
+        {
+            var response=new ResponseDTO();
+            var user=await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                response.IsSuccess=false;
+                response.Message = "User doesn't exist";
+                return response;
+            }
+
+            var result=await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                response.IsSuccess=true;
+                response.Message = "Successfully deleted";
+                return response;
+            }
+            response.IsSuccess = false;
+            response.Message = "An unhandled error occured";
+            return response;
+        }
     }
 }

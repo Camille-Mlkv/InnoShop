@@ -7,7 +7,13 @@ namespace InnoShop.Services.AuthAPI.Service.IService
     {
         Task<string> Register(RegistrationRequestDTO registrationRequestDTO);
         Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO);
+
+        Task<string> ConfirmAccount(string userId);
         Task ForgotPassword(ForgotPasswordViewModel forgotPasswordViewModel);
-        Task<ResponseDTO> ResetPassword(ResetPasswordViewModel model);
+        Task<string> ResetPassword(string userId);
+        Task<ResponseDTO> SavePassword(ResetPasswordViewModel model);
+
+        Task<ResponseDTO> UpdateUserAsync(string id, UpdateUserDTO model);
+        Task<ResponseDTO> DeleteUserAsync(string id);
     }
 }

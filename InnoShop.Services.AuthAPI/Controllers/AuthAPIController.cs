@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace InnoShop.Services.AuthAPI.Controllers
 {
@@ -22,9 +23,11 @@ namespace InnoShop.Services.AuthAPI.Controllers
         {
             _authService = authService;
             _response = new();
-            _userManager= userManager;
+            _userManager = userManager;
         }
 
+
+        //create
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO model)
         {
@@ -54,25 +57,17 @@ namespace InnoShop.Services.AuthAPI.Controllers
 
         [HttpGet("ConfirmEmail")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string userId, string code)
+        public async Task<IActionResult> ConfirmEmail(string userId) //, string code
         {
-            if (userId == null || code == null)
+            string result=await _authService.ConfirmAccount(userId);
+            if (result.IsNullOrEmpty())
             {
-                return BadRequest("Error");
+                return Ok();
             }
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return BadRequest("Error");
-            }
-            var result = await _userManager.ConfirmEmailAsync(user, code);
-            if (result.Succeeded)
-            {
-                return Ok("Your email has been confirmed, thanks");
-            }
-                
             else
-                return BadRequest("Error");
+            {
+                return BadRequest(result); 
+            }
             
         }
 
@@ -83,21 +78,27 @@ namespace InnoShop.Services.AuthAPI.Controllers
             {
                 await _authService.ForgotPassword(model); //sending email
                 _response.IsSuccess = true;
-                _response.Message = "Okay";
+                _response.Message = "Email sent";
                 return Ok(_response);
             }
             _response.IsSuccess = false;
-            _response.Message = "Not fine";
+            _response.Message = "An error occured";
             return BadRequest(_response);
         }
 
         [HttpGet("ResetPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(string userId, string code)
+        public async Task<IActionResult> ResetPassword(string userId)
         {
-            var userEmail = (await _userManager.FindByIdAsync(userId)).Email;
-            var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(userEmail)}";
-            return Redirect(callbackUrl);
+            var result=await _authService.ResetPassword(userId);
+            if (result == "Error")
+            {
+                return BadRequest(result);
+            }
+            else
+            {
+                return Redirect(result);
+            }
         }
 
         [HttpPost("SaveNewPassword")]
@@ -105,7 +106,7 @@ namespace InnoShop.Services.AuthAPI.Controllers
         {
             if (ModelState.IsValid)
             {
-                ResponseDTO response=await _authService.ResetPassword(model);
+                ResponseDTO response=await _authService.SavePassword(model);
                 if (response.IsSuccess)
                 {
                     return Ok(response);
@@ -113,6 +114,51 @@ namespace InnoShop.Services.AuthAPI.Controllers
                 return BadRequest(response);
             }
             return BadRequest();    
+        }
+
+        //CRUD operations
+
+
+        //Read
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if(user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
+
+        //Update
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, UpdateUserDTO model)
+        {
+            var response=await _authService.UpdateUserAsync(id, model);
+            if (response.IsSuccess) {
+                return Ok(response.Message);
+            }
+            else
+            {
+                return BadRequest(response.Message);
+            }
+        }
+
+
+        //Delete
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var response = await _authService.DeleteUserAsync(id);
+            if (response.IsSuccess)
+            {
+                return Ok(response.Message);
+            }
+            else
+            {
+                return BadRequest(response.Message);
+            }
         }
 
     }
