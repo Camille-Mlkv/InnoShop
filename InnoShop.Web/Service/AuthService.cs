@@ -22,7 +22,7 @@ namespace InnoShop.Web.Service
                 Data = loginRequestDTO,
                 Url = SD.AuthAPIBase + "/api/auth/login"
 
-            });
+            }, withBearer: false);
         }
 
         public async Task<ResponseDTO?> RegisterAsync(RegistrationRequestDTO registrationRequestDTO)
@@ -33,7 +33,7 @@ namespace InnoShop.Web.Service
                 Data= registrationRequestDTO,
                 Url=SD.AuthAPIBase+"/api/auth/register"
 
-            });
+            }, withBearer: false);
         }
 
 
