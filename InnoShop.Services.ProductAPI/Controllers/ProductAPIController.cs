@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace InnoShop.Services.ProductAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/product")]
     [ApiController]
     public class ProductAPIController : ControllerBase
     {
