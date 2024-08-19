@@ -110,6 +110,28 @@ namespace InnoShop.Services.ProductAPI.Controllers
             return _response;
         }
 
+        [HttpGet("FindByName")]
+        public ResponseDTO FindByName([FromQuery] string productName)
+        {
+            try
+            {
+                var query=_db.Products.AsQueryable();
+                if (!string.IsNullOrEmpty(productName))
+                {
+                    query=query.Where(x=>x.Name == productName);
+                }
+                IEnumerable<Product> objList=query.ToList();
+                _response.Result=_mapper.Map<IEnumerable<ProductDTO>>(objList);
+
+            }
+            catch(Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.Message = ex.Message;
+            }
+            return _response;
+        }
+
         [Authorize]
         [HttpPost]
         public ResponseDTO Post([FromBody] ProductDTO productDTO)

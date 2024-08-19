@@ -44,5 +44,40 @@ namespace InnoShop.Web.Controllers
 			}
 			return View("ProductIndex", list);
 		}
+
+        public async Task<IActionResult> FindProduct(string? productName)
+        {
+            List<ProductDTO?> list = new();
+			if (!string.IsNullOrEmpty(productName))
+			{
+				ResponseDTO? response = await _productService.FindProductByNameAsync(productName);
+				if (response != null && response.IsSuccess)
+				{
+					list = JsonConvert.DeserializeObject<List<ProductDTO>>(Convert.ToString(response.Result));
+				}
+				else
+				{
+					TempData["error"] = response?.Message;
+				}
+			}
+			
+			return View("ProductIndex", list);
+		}
+
+        public async Task<IActionResult> ClientProductIndex(string clientId)
+        {
+            List<ProductDTO?> list = new();
+            ResponseDTO? response = await _productService.GetProductsByClientIdAsync(clientId);
+            if (response != null && response.IsSuccess)
+            {
+                list = JsonConvert.DeserializeObject<List<ProductDTO>>(Convert.ToString(response.Result));
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            
+            return View("ClientProductIndex",list);
+        }
     }
 }

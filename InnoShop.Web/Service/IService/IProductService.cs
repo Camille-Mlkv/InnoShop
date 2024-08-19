@@ -6,5 +6,7 @@ namespace InnoShop.Web.Service.IService
     {
         Task<ResponseDTO?> GetAllProductsAsync();
         Task<ResponseDTO?> GetFilteredProductsAsync(double? minPrice, double? maxPrice, bool? isAvailable);
+        Task<ResponseDTO?> FindProductByNameAsync(string? productName);
+        Task<ResponseDTO?> GetProductsByClientIdAsync(string clientId);
     }
 }

@@ -7,9 +7,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Views\Product\ClientProductIndex.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MailKit" Version="4.7.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Product\ClientProductIndex.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Product\ClientProductIndex.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Views\Product\ClientProductIndex.cshtml" />
   </ItemGroup>
 
 </Project>

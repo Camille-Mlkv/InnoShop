@@ -1,6 +1,7 @@
 ﻿using InnoShop.Web.Models;
 using InnoShop.Web.Service.IService;
 using InnoShop.Web.Utility;
+using System.Xml.Linq;
 
 namespace InnoShop.Web.Service
 {
@@ -12,7 +13,8 @@ namespace InnoShop.Web.Service
         {
             _baseService = baseService;
         }
-        public async Task<ResponseDTO?> GetAllProductsAsync()
+
+		public async Task<ResponseDTO?> GetAllProductsAsync()
         {
             return await _baseService.SendAsync(new RequestDTO
             {
@@ -39,8 +41,6 @@ namespace InnoShop.Web.Service
 				queryParameters.Add($"isAvailable={isAvailable.Value}");
 			}
 
-			//https://localhost:7002/api/product/GetFilteredData?minPrice=30&maxPrice=500
-			//{https://localhost:7002/api/product/GetFilteredData?minPrice=30&maxPrice=500}
 			var queryString = string.Join("&", queryParameters);
 
 			var url = SD.ProductAPIBase + "/api/product/GetFilteredData";
@@ -55,5 +55,41 @@ namespace InnoShop.Web.Service
 				Url = url
 			});
 		}
-	}
+
+		public async Task<ResponseDTO?> FindProductByNameAsync(string? productName)
+		{
+			var queryParameters = new List<string>();
+
+			if (!string.IsNullOrEmpty(productName))
+			{
+				queryParameters.Add($"productName={productName}");
+			}
+			var queryString = string.Join("&", queryParameters);
+
+			var url = SD.ProductAPIBase + "/api/product/FindByName";
+			if (!string.IsNullOrEmpty(queryString))
+			{
+				url += "?" + queryString;
+			}
+
+			return await _baseService.SendAsync(new RequestDTO
+			{
+				ApiType = SD.ApiType.GET,
+				Url = url
+
+			});
+		}
+
+        public async Task<ResponseDTO?> GetProductsByClientIdAsync(string clientId)
+        {
+            var url = $"{SD.ProductAPIBase}/api/product/{clientId}";
+
+            return await _baseService.SendAsync(new RequestDTO
+            {
+                ApiType = SD.ApiType.GET,
+                Url = url
+            });
+
+        }
+    }
 }

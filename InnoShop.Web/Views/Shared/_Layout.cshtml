@@ -26,6 +26,13 @@
                         <li class="nav-item">
                             <a class="nav-link text-light" asp-area="" asp-controller="Product" asp-action="ProductIndex">Products</a>
                         </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Product" asp-action="ClientProductIndex" asp-route-clientId="@userId">My products</a>
+                            </li>
+                        }
                     </ul>
 
                     <ul class="navbar-nav">
