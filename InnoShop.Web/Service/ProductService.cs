@@ -91,5 +91,45 @@ namespace InnoShop.Web.Service
             });
 
         }
+
+        public async Task<ResponseDTO?> CreateProductAsync(ProductDTO product)
+        {
+			return await _baseService.SendAsync(new RequestDTO
+			{
+				ApiType=SD.ApiType.POST,
+                Data = product,
+                Url = SD.ProductAPIBase + "/api/product"
+            });
+        }
+
+        public async Task<ResponseDTO?> DeleteProductAsync(int productId)
+        {
+            var url = SD.ProductAPIBase + "/api/product?id=" + productId;
+            return await _baseService.SendAsync(new RequestDTO
+            {
+                ApiType = SD.ApiType.DELETE,
+                Url = url
+            });
+        }
+
+        public async Task<ResponseDTO?> GetProductByIdAsync(int productId)
+        {
+            var url = SD.ProductAPIBase + "/api/product/" + productId;
+            return await _baseService.SendAsync(new RequestDTO
+            {
+                ApiType = SD.ApiType.GET,
+                Url = url
+            });
+        }
+
+        public async Task<ResponseDTO?> UpdateProductAsync(ProductDTO product)
+        {
+            return await _baseService.SendAsync(new RequestDTO
+            {
+                ApiType = SD.ApiType.PUT,
+                Data = product,
+                Url = SD.ProductAPIBase + "/api/product"
+            });
+        }
     }
 }

@@ -10,32 +10,12 @@
 	</div>
 	<div class="card-body p-4">
 		<div class="row pb-3">
-			@* <div class="col-6">
-				<form method="get" asp-action="ProductFilter">
-					<div class="form-group">
-						<label for="minPrice">Min Price:</label>
-						<input type="number" step="0.01" class="form-control" id="minPrice" name="minPrice">
-					</div>
-					<div class="form-group">
-						<label for="maxPrice">Max Price:</label>
-						<input type="number" step="0.01" class="form-control" id="maxPrice" name="maxPrice">
-					</div>
-					<div class="form-group form-check">
-						<input type="checkbox" class="form-check-input" id="isAvailable" name="isAvailable" value="true">
-						<label class="form-check-label" for="isAvailable">Only Available</label>
-					</div>
-					<button type="submit" class="btn btn-primary">Filter</button>
-				</form>
-			</div> *@
-			@* <div class="col-6 text-right">
-				<form method="get" asp-action="FindProduct">
-					<div class="form-group">
-						<label for="productName">Search by Name:</label>
-						<input type="text" class="form-control" id="productName" name="productName" placeholder="Enter product name">
-					</div>
-					<button type="submit" class="btn btn-secondary">Search</button>
-				</form>
-			</div> *@
+			<div class="col-6">
+			</div>
+			<div class="col-6 text-end">
+				<a asp-action="CreateProduct" class="btn btn-outline-primary"><i class="bi bi-plus-square"></i> Create New Product</a>
+
+			</div>
 		</div>
 		<table class="table">
 			<thead>
@@ -70,6 +50,14 @@
 						</td>
 						<td>
 							@(item.IsAvailable ? "Yes" : "No")
+						</td>
+						<td>
+							<a asp-action="DeleteProduct" asp-route-productId="@item.ProductId" class="btn btn-danger">
+								<i class="bi bi-trash"></i>
+							</a>
+							<a asp-action="EditProduct" asp-route-productId="@item.ProductId" class="btn btn-warning ms-2">
+								<i class="bi bi-pencil-square"></i>
+							</a>
 						</td>
 					</tr>
 				}

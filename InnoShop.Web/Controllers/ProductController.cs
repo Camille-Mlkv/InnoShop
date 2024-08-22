@@ -79,5 +79,80 @@ namespace InnoShop.Web.Controllers
             
             return View("ClientProductIndex",list);
         }
+
+        public IActionResult CreateProduct()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateProduct(ProductDTO product)
+        {
+            
+            product.UserId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            product.Date = DateTime.Now;
+            var response=await _productService.CreateProductAsync(product);
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = "Product created successfully";
+                return RedirectToAction("ClientProductIndex", new { clientId = product.UserId });
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            return View();
+        }
+
+        public async Task<IActionResult> DeleteProduct(int productId)
+        {
+
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            var response=await _productService.DeleteProductAsync(productId);
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = "Product deleted successfully";
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            return RedirectToAction("ClientProductIndex", new { clientId = userId});
+        }
+
+        public async Task<IActionResult> EditProduct(int productId)
+        {
+            var response=await _productService.GetProductByIdAsync(productId);
+            if (response != null && response.IsSuccess)
+            {
+                ProductDTO? model = JsonConvert.DeserializeObject<ProductDTO>(Convert.ToString(response.Result));
+                return View(model);
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProduct(ProductDTO product)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            product.UserId = userId;
+            product.Date = DateTime.Now;
+
+            var response=await _productService.UpdateProductAsync(product);
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = "Product updated successfully";
+                return RedirectToAction("ClientProductIndex", new { clientId = userId });
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            return View(product);
+        }
     }
 }
