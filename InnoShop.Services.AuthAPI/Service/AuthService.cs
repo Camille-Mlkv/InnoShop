@@ -39,10 +39,14 @@ namespace InnoShop.Services.AuthAPI.Service
         public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
         {
             var user=_db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower()==loginRequestDTO.UserName.ToLower());
+            if (user==null)
+            {
+                return new LoginResponseDTO() { User = null, Token = "" };
+            }
             bool isValid=await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
             bool isAccountConfirmed=await _userManager.IsEmailConfirmedAsync(user);
 
-            if(user==null || !isValid || !isAccountConfirmed)
+            if(!isValid || !isAccountConfirmed)
             {
                 return new LoginResponseDTO() { User = null, Token = "" };
             }
@@ -108,6 +112,7 @@ namespace InnoShop.Services.AuthAPI.Service
                         new { userId = user.Id },
                         protocol: _httpContextAccessor.HttpContext.Request.Scheme);
 
+                    callbackUrl = callbackUrl.Replace("https://localhost:7001", "https://ed63-212-47-148-183.ngrok-free.app");
                     // Send email
                     await _emailService.SendEmailAsync(registrationRequestDTO.Email, "Confirm your account",
                         $"Confrim your account on InnoShop through this link: <a href='{callbackUrl}'>Here</a>");
@@ -155,7 +160,7 @@ namespace InnoShop.Services.AuthAPI.Service
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
-                return;
+                return; //we don't show that the user doesn't exist
             }
 
             var actionContext = new ActionContext(
@@ -182,8 +187,9 @@ namespace InnoShop.Services.AuthAPI.Service
                 return "Error";
             }
             string code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(user.Email)}";
-            return callbackUrl;
+            //var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(user.Email)}";
+            //return callbackUrl;
+            return code;
         }
 
         public async Task<ResponseDTO> SavePassword(ResetPasswordViewModel model)
@@ -204,7 +210,7 @@ namespace InnoShop.Services.AuthAPI.Service
                 return response;
             }
             response.IsSuccess = false;
-            response.Message = "An unhandled error occured";
+            response.Message = "Error saving password";
             return response;
             
         }
@@ -288,7 +294,7 @@ namespace InnoShop.Services.AuthAPI.Service
                 return response;
             }
             response.IsSuccess = false;
-            response.Message = "An unhandled error occured";
+            response.Message = "Failed to delete user";
             return response;
         }
     }

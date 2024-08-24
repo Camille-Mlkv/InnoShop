@@ -120,7 +120,7 @@ namespace InnoShop.Web.Controllers
             ResponseDTO result = await _authService.ForgotPasswordAsync(model);
             if (result != null && result.IsSuccess)
             {
-                return RedirectToAction(nameof(ForgotPasswordConfirmation)); 
+                return RedirectToAction(nameof(ForgotPasswordConfirmation), new { email = model.Email }); 
             }
             else
             {
@@ -130,41 +130,23 @@ namespace InnoShop.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult ForgotPasswordConfirmation()
+        public IActionResult ForgotPasswordConfirmation(string email=null)
         {
-            return View();
-        }
-
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult ResetPassword(string code = null,string id=null,string email=null)
-        {
-            if (code == null) 
+            var model = new ResetPasswordViewModel
             {
-                return View("Error");
-            }
-            else
-            {
-                var model = new ResetPasswordViewModel
-                {
-                    Code = code,
-                    Email= email
-                };
-                return View(model);
-            }
+                Email = email
+            };
+            return View(model);
         }
 
         [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        public async Task<IActionResult> ForgotPasswordConfirmation(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
-            ResponseDTO response=await _authService.ResetPasswordAsync(model);
+            ResponseDTO response = await _authService.ResetPasswordAsync(model);
             if (response != null && response.IsSuccess)
             {
                 return View("ResetPasswordConfirmation");
@@ -175,7 +157,6 @@ namespace InnoShop.Web.Controllers
             }
             return View(model);
         }
-
 
         [HttpGet]
         public IActionResult ResetPasswordConfirmation()

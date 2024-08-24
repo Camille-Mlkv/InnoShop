@@ -57,12 +57,12 @@ namespace InnoShop.Services.AuthAPI.Controllers
 
         [HttpGet("ConfirmEmail")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string userId) //, string code
+        public async Task<IActionResult> ConfirmEmail(string userId)
         {
             string result=await _authService.ConfirmAccount(userId);
             if (result.IsNullOrEmpty())
             {
-                return Ok();
+                return Ok("Email is confirmed");
             }
             else
             {
@@ -97,7 +97,7 @@ namespace InnoShop.Services.AuthAPI.Controllers
             }
             else
             {
-                return Redirect(result);
+                return Ok(result); //code is displayed
             }
         }
 
