@@ -7,17 +7,16 @@ using InnoShop.Services.AuthAPI.Models.DTO;
 using InnoShop.Services.AuthAPI.Models.PasswordModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace InnoShop.TestAuthAPI
+namespace InnoShop.TestAuthAPI.UnitTests
 {
-    public class AuthAPIControllerTests
+    public class AuthAPIControllerUnitTests
     {
         private readonly Mock<IAuthService> _authServiceMock;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly AuthAPIController _controller;
 
-        public AuthAPIControllerTests()
+        public AuthAPIControllerUnitTests()
         {
             _authServiceMock = new Mock<IAuthService>();
             _userManagerMock = new Mock<UserManager<ApplicationUser>>(
@@ -132,11 +131,11 @@ namespace InnoShop.TestAuthAPI
                             .ReturnsAsync(expectedResponse);
 
             //Act
-            var result=await _controller.Login(loginRequestDto);
+            var result = await _controller.Login(loginRequestDto);
 
             //Assert
-            var okResult=Assert.IsType<OkObjectResult>(result);
-            var response= Assert.IsType<ResponseDTO>(okResult.Value);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<ResponseDTO>(okResult.Value);
             Assert.True(response.IsSuccess);
 
             var loginResponse = Assert.IsType<LoginResponseDTO>(response.Result);
@@ -178,11 +177,11 @@ namespace InnoShop.TestAuthAPI
         {
             //Arrange
             string userId = "someExistingId";
-            _authServiceMock.Setup(s=>s.ConfirmAccount(It.IsAny<string>()))
+            _authServiceMock.Setup(s => s.ConfirmAccount(It.IsAny<string>()))
                 .ReturnsAsync(string.Empty);
 
             //Act
-            var result=await _controller.ConfirmEmail(userId);
+            var result = await _controller.ConfirmEmail(userId);
 
             //Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -407,9 +406,9 @@ namespace InnoShop.TestAuthAPI
         {
             // Arrange
             string userId = "existingUserId";
-            var response = new ResponseDTO 
-            { 
-                IsSuccess = true, 
+            var response = new ResponseDTO
+            {
+                IsSuccess = true,
                 Message = "Successfully deleted"
             };
 
@@ -429,10 +428,10 @@ namespace InnoShop.TestAuthAPI
         {
             // Arrange
             string userId = "existingUserId";
-            var response = new ResponseDTO 
-            { 
-                IsSuccess = false, 
-                Message = "Failed to delete user" 
+            var response = new ResponseDTO
+            {
+                IsSuccess = false,
+                Message = "Failed to delete user"
             };
 
             _authServiceMock.Setup(s => s.DeleteUserAsync(userId))

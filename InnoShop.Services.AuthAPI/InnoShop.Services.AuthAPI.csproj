@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -21,5 +21,9 @@
 	  </PackageReference>
 	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="InnoShop.TestAuthAPI"/>
+	</ItemGroup>
 
 </Project>

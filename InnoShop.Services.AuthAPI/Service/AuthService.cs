@@ -176,7 +176,7 @@ namespace InnoShop.Services.AuthAPI.Service
                 protocol: _httpContextAccessor.HttpContext.Request.Scheme);
 
             await _emailService.SendEmailAsync(model.Email, "Reset Password",
-                $"To reset the password follow the link: <a href='{callbackUrl}'>link</a>");
+                $"To reset the password follow the link: <a href='{callbackUrl}'>link</a> . Here you will find the password reset code.");
         }
 
         public async Task<string> ResetPassword(string userId) 
@@ -187,8 +187,6 @@ namespace InnoShop.Services.AuthAPI.Service
                 return "Error";
             }
             string code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            //var callbackUrl = $"https://localhost:7271/Auth/ResetPassword?userId={userId}&code={Uri.EscapeDataString(code)}&email={Uri.EscapeDataString(user.Email)}";
-            //return callbackUrl;
             return code;
         }
 
